@@ -20,6 +20,13 @@ int main()
         std::negation<Set<Zero, One>::is_subset_of<Set<Zero, Two>>>::value, "");
 
     static_assert(
+        Set<Zero, One>::is_proper_subset_of<Set<Zero, One, Two>>::value, "");
+    static_assert(
+        std::negation<
+            Set<Zero, One>::is_proper_subset_of<Set<Zero, One>>>::value,
+        "");
+
+    static_assert(
         Insert<Zero, Set<One, Two>>::result::has_member<Zero>::value, "");
     static_assert(
         Insert<Zero, Set<One, Two>>::result::has_member<One>::value, "");

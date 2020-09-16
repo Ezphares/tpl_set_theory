@@ -11,6 +11,14 @@ struct NaturalCardinal
     static constexpr bool is_finite           = true;
 };
 
+template <typename, typename>
+struct CardinalLess;
+
+template <unsigned long long L, unsigned long long R>
+struct CardinalLess<NaturalCardinal<L>, NaturalCardinal<R>>
+    : public std::conditional<(L < R), std::true_type, std::false_type>::type
+{};
+
 // Empty set base case
 template <typename... Tail>
 struct Set
@@ -22,6 +30,12 @@ struct Set
 
     template <typename Other>
     using is_subset_of = std::true_type;
+
+    template <typename Other>
+    using is_proper_subset_of = std::conditional<
+        CardinalLess<cardinality, typename Other::cardinality>::value,
+        std::true_type,
+        std::false_type>;
 
     using unique = Set<>;
 };
@@ -45,6 +59,11 @@ struct Set<Head, Tail...>
     using is_subset_of = std::conjunction<
         typename Other::template has_member<Head>,
         typename Set<Tail...>::template is_subset_of<Other>>;
+
+    template <typename Other>
+    using is_proper_subset_of = std::conjunction<
+        CardinalLess<cardinality, typename Other::cardinality>,
+        is_subset_of<Other>>;
 
     using unique = typename std::conditional<
         Set<Tail...>::template has_member<Head>::value,
