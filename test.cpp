@@ -61,5 +61,31 @@ int main()
             SymmetricDifference<Set<Zero, One>, Set<One, Two>>::result>::value,
         "");
 
+    {
+        typedef CartesianProduct<Set<Zero, One>, Set<One, Two>>::result
+            TestCartesianProduct;
+
+        static_assert(
+            std::is_same<
+                TestCartesianProduct::cardinality,
+                NaturalCardinal<4>>::value,
+            "");
+        static_assert(
+            TestCartesianProduct::template has_member<
+                std::pair<Zero, One>>::value,
+            "");
+        static_assert(
+            TestCartesianProduct::template has_member<
+                std::pair<Zero, Two>>::value,
+            "");
+        static_assert(
+            TestCartesianProduct::template has_member<
+                std::pair<One, One>>::value,
+            "");
+        static_assert(
+            TestCartesianProduct::template has_member<
+                std::pair<One, Two>>::value,
+            "");
+    }
     return 0;
 }

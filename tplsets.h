@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <utility>
 
 namespace tplsets {
 
@@ -143,6 +144,37 @@ struct SymmetricDifference<Set<L...>, Set<R...>>
     using result = typename Union<
         typename Difference<Set<L...>, Set<R...>>::result,
         typename Difference<Set<R...>, Set<L...>>::result>::result;
+};
+
+template <typename, typename>
+struct _prefix;
+template <typename T>
+struct _prefix<T, Set<>>
+{
+    using result = Set<>;
+};
+template <typename T, typename... Ts>
+struct _prefix<T, Set<Ts...>>
+{
+    using result = typename _append<
+        typename std::pair<T, typename Set<Ts...>::head>,
+        typename _prefix<T, typename Set<Ts...>::tail>::result>::result;
+};
+
+template <typename, typename>
+struct CartesianProduct;
+template <typename... Rs>
+struct CartesianProduct<Set<>, Set<Rs...>>
+{
+    using result = Set<>;
+};
+template <typename... Ls, typename... Rs>
+struct CartesianProduct<Set<Ls...>, Set<Rs...>>
+{
+    using result = typename Union<
+        typename _prefix<typename Set<Ls...>::head, Set<Rs...>>::result,
+        typename CartesianProduct<typename Set<Ls...>::tail, Set<Rs...>>::
+            result>::result;
 };
 
 } // namespace tplsets
