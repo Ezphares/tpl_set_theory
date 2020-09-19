@@ -177,4 +177,36 @@ struct CartesianProduct<Set<Ls...>, Set<Rs...>>
             result>::result;
 };
 
+template <typename, typename>
+struct _permutate;
+template <typename Head>
+struct _permutate<Head, Set<>>
+{
+    using result = Set<Set<Head>>;
+};
+template <typename Head, typename... Tail>
+struct _permutate<Head, Set<Tail...>>
+{
+    using result = typename Union<
+        typename Set<typename _append<Head, Set<Tail...>>::result>,
+        typename _permutate<Head, typename Set<Tail...>::tail>::result>::result;
+};
+
+template <typename TSet>
+struct PowerSet;
+template <>
+struct PowerSet<Set<>>
+{
+    using result = Set<Set<>>;
+};
+template <typename... Ts>
+struct PowerSet<Set<Ts...>>
+{
+    using result = typename Union<
+        typename _permutate<
+            typename Set<Ts...>::head,
+            typename Set<Ts...>::tail>::result,
+        typename PowerSet<typename Set<Ts...>::tail>::result>::result;
+};
+
 } // namespace tplsets

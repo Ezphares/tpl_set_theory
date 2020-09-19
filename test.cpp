@@ -87,5 +87,37 @@ int main()
                 std::pair<One, Two>>::value,
             "");
     }
+
+    {
+        typedef _permutate<Zero, Set<One, Two>>::result TestPermutate;
+
+        static_assert(
+            std::is_same<TestPermutate::cardinality, NaturalCardinal<3u>>::
+                value,
+            "");
+
+        static_assert(TestPermutate::template has_member<Set<Zero>>::value, "");
+
+        static_assert(
+            TestPermutate::template has_member<Set<Zero, Two>>::value, "");
+
+        static_assert(
+            TestPermutate::template has_member<Set<Zero, One, Two>>::value, "");
+    }
+
+    {
+        typedef PowerSet<Set<Zero, One>>::result TestPowerset;
+
+        static_assert(
+            std::is_same<TestPowerset::cardinality, NaturalCardinal<4u>>::value,
+            "");
+
+        static_assert(TestPowerset::template has_member<Set<>>::value, "");
+        static_assert(TestPowerset::template has_member<Set<Zero>>::value, "");
+        static_assert(TestPowerset::template has_member<Set<One>>::value, "");
+        static_assert(
+            TestPowerset::template has_member<Set<Zero, One>>::value, "");
+    }
+
     return 0;
 }
