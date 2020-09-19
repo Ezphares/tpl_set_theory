@@ -49,6 +49,8 @@ template <typename Head, typename... Tail>
 struct Set<Head, Tail...>
 {
     using cardinality = NaturalCardinal<sizeof...(Tail) + 1ull>;
+    using head        = Head;
+    using tail        = typename Set<Tail...>;
 
     template <typename T>
     using has_member = std::disjunction<
@@ -92,6 +94,55 @@ template <typename... L, typename... R>
 struct Union<Set<L...>, Set<R...>>
 {
     using result = typename Set<L..., R...>::unique;
+};
+
+template <typename, typename>
+struct Intersection;
+template <typename... R>
+struct Intersection<Set<>, Set<R...>>
+{
+    using result = Set<>;
+};
+template <typename... L, typename... R>
+struct Intersection<Set<L...>, Set<R...>>
+{
+    using result = typename std::conditional<
+        Set<R...>::template has_member<typename Set<L...>::head>::value,
+        typename _append<
+            typename Set<L...>::head,
+            typename Intersection<typename Set<L...>::tail, Set<R...>>::
+                result>::result,
+        typename Intersection<typename Set<L...>::tail, Set<R...>>::result>::
+        type;
+};
+
+template <typename, typename>
+struct Difference;
+template <typename... R>
+struct Difference<Set<>, Set<R...>>
+{
+    using result = Set<>;
+};
+template <typename... L, typename... R>
+struct Difference<Set<L...>, Set<R...>>
+{
+    using result = typename std::conditional<
+        Set<R...>::template has_member<typename Set<L...>::head>::value,
+        typename Difference<typename Set<L...>::tail, Set<R...>>::result,
+        typename _append<
+            typename Set<L...>::head,
+            typename Difference<typename Set<L...>::tail, Set<R...>>::result>::
+            result>::type;
+};
+
+template <typename, typename>
+struct SymmetricDifference;
+template <typename... L, typename... R>
+struct SymmetricDifference<Set<L...>, Set<R...>>
+{
+    using result = typename Union<
+        typename Difference<Set<L...>, Set<R...>>::result,
+        typename Difference<Set<R...>, Set<L...>>::result>::result;
 };
 
 } // namespace tplsets

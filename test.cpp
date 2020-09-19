@@ -43,5 +43,23 @@ int main()
     static_assert(
         Union<Set<Zero>, Set<One>>::result::has_member<Zero>::value, "");
 
+    static_assert(
+        std::is_same<
+            Set<One>,
+            Intersection<Set<Zero, One>, Set<One, Two>>::result>::value,
+        "");
+
+    static_assert(
+        std::is_same<
+            Set<Zero>,
+            Difference<Set<Zero, One>, Set<One, Two>>::result>::value,
+        "");
+
+    static_assert(
+        std::is_same<
+            Set<Zero, Two>,
+            SymmetricDifference<Set<Zero, One>, Set<One, Two>>::result>::value,
+        "");
+
     return 0;
 }
