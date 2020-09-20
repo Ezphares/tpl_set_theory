@@ -10,58 +10,116 @@ int main()
     typedef NaturalCardinal<1> One;
     typedef NaturalCardinal<2> Two;
 
-    static_assert(Set<Zero, One>::has_member<Zero>::value, "");
-    static_assert(Set<Zero, One>::has_member<One>::value, "");
-    static_assert(std::negation<Set<Zero, One>::has_member<Two>>::value, "");
+    {
+        // Basic property test
+        typedef Set<Zero, One> TestHasMember;
 
-    static_assert(Set<Zero, One>::is_subset_of<Set<Zero, One, Two>>::value, "");
-    static_assert(Set<Zero, One>::is_subset_of<Set<Zero, One>>::value, "");
-    static_assert(
-        std::negation<Set<Zero, One>::is_subset_of<Set<Zero, Two>>>::value, "");
+        static_assert(
+            std::is_same<TestHasMember::cardinality, NaturalCardinal<2u>>::
+                value,
+            "");
 
-    static_assert(
-        Set<Zero, One>::is_proper_subset_of<Set<Zero, One, Two>>::value, "");
-    static_assert(
-        std::negation<
-            Set<Zero, One>::is_proper_subset_of<Set<Zero, One>>>::value,
-        "");
-
-    static_assert(
-        Insert<Zero, Set<One, Two>>::result::has_member<Zero>::value, "");
-    static_assert(
-        Insert<Zero, Set<One, Two>>::result::has_member<One>::value, "");
-    static_assert(
-        Insert<Zero, Set<One, Two>>::result::has_member<Two>::value, "");
-
-    static_assert(
-        Insert<Zero, Set<One, Two>>::result::cardinality::value == 3ull, "");
-    static_assert(
-        Insert<One, Set<One, Two>>::result::cardinality::value == 2ull, "");
-
-    static_assert(
-        Union<Set<Zero>, Set<One>>::result::has_member<One>::value, "");
-    static_assert(
-        Union<Set<Zero>, Set<One>>::result::has_member<Zero>::value, "");
-
-    static_assert(
-        std::is_same<
-            Set<One>,
-            Intersection<Set<Zero, One>, Set<One, Two>>::result>::value,
-        "");
-
-    static_assert(
-        std::is_same<
-            Set<Zero>,
-            Difference<Set<Zero, One>, Set<One, Two>>::result>::value,
-        "");
-
-    static_assert(
-        std::is_same<
-            Set<Zero, Two>,
-            SymmetricDifference<Set<Zero, One>, Set<One, Two>>::result>::value,
-        "");
+        static_assert(TestHasMember::has_member<Zero>::value, "");
+        static_assert(TestHasMember::has_member<One>::value, "");
+        static_assert(std::negation<TestHasMember::has_member<Two>>::value, "");
+    }
 
     {
+        // Test unordered-ness
+
+        static_assert(std::is_same<Set<Zero, One>, Set<One, Zero>>::value, "");
+    }
+
+    {
+        // Subset test
+        static_assert(
+            Set<Zero, One>::is_subset_of<Set<Zero, One, Two>>::value, "");
+        static_assert(Set<Zero, One>::is_subset_of<Set<Zero, One>>::value, "");
+        static_assert(
+            std::negation<Set<Zero, One>::is_subset_of<Set<Zero, Two>>>::value,
+            "");
+    }
+
+    {
+        // Proper subset test
+        static_assert(
+            Set<Zero, One>::is_proper_subset_of<Set<Zero, One, Two>>::value,
+            "");
+        static_assert(
+            std::negation<
+                Set<Zero, One>::is_proper_subset_of<Set<Zero, One>>>::value,
+            "");
+    }
+
+    {
+        // Mutation test
+
+        static_assert(
+            _append<Zero, Set<One, Two>>::result::unique::has_member<
+                Zero>::value,
+            "");
+        static_assert(
+            _append<Zero, Set<One, Two>>::result::unique::has_member<
+                One>::value,
+            "");
+        static_assert(
+            _append<Zero, Set<One, Two>>::result::unique::has_member<
+                Two>::value,
+            "");
+
+        static_assert(
+            _append<Zero, Set<One, Two>>::result::unique::cardinality::value
+                == 3ull,
+            "");
+        static_assert(
+            _append<One, Set<One, Two>>::result::unique::cardinality::value
+                == 2ull,
+            "");
+    }
+
+    {
+        // Union test
+
+        static_assert(
+            Union<Set<Zero>, Set<One>>::result::has_member<One>::value, "");
+        static_assert(
+            Union<Set<Zero>, Set<One>>::result::has_member<Zero>::value, "");
+    }
+
+    {
+        // Intersection test
+
+        static_assert(
+            std::is_same<
+                Set<One>,
+                Intersection<Set<Zero, One>, Set<One, Two>>::result>::value,
+            "");
+    }
+
+    {
+        // Test difference
+
+        static_assert(
+            std::is_same<
+                Set<Zero>,
+                Difference<Set<Zero, One>, Set<One, Two>>::result>::value,
+            "");
+    }
+
+    {
+        // Test symmetric difference
+
+        static_assert(
+            std::is_same<
+                Set<Zero, Two>,
+                SymmetricDifference<Set<Zero, One>, Set<One, Two>>::result>::
+                value,
+            "");
+    }
+
+    {
+        // Cartesian product test
+
         typedef CartesianProduct<Set<Zero, One>, Set<One, Two>>::result
             TestCartesianProduct;
 
@@ -89,6 +147,8 @@ int main()
     }
 
     {
+        // Test permutation helper
+
         typedef _permutate<Zero, Set<One, Two>>::result TestPermutate;
 
         static_assert(
@@ -106,6 +166,8 @@ int main()
     }
 
     {
+        // Test power set
+
         typedef PowerSet<Set<Zero, One>>::result TestPowerset;
 
         static_assert(
@@ -117,6 +179,22 @@ int main()
         static_assert(TestPowerset::template has_member<Set<One>>::value, "");
         static_assert(
             TestPowerset::template has_member<Set<Zero, One>>::value, "");
+    }
+
+    {
+        // Test conversion to predicate based set
+
+        typedef PredicateSet<_conversion_predicate<Set<Zero, One>>>
+            TestConversionPredicate;
+
+        static_assert(
+            TestConversionPredicate::template has_member<Zero>::value, "");
+        static_assert(
+            TestConversionPredicate::template has_member<One>::value, "");
+        static_assert(
+            std::negation<
+                TestConversionPredicate::template has_member<Two>>::value,
+            "");
     }
 
     return 0;

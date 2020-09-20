@@ -5,6 +5,11 @@
 
 namespace tplsets {
 
+// Basic explicitly enumerated set
+template <typename... TElements>
+struct Set;
+
+// Number system
 template <unsigned long long N>
 struct NaturalCardinal
 {
@@ -12,17 +17,35 @@ struct NaturalCardinal
     static constexpr bool is_finite           = true;
 };
 
+// Numeric operations
 template <typename, typename>
 struct CardinalLess;
 
-template <unsigned long long L, unsigned long long R>
-struct CardinalLess<NaturalCardinal<L>, NaturalCardinal<R>>
-    : public std::conditional<(L < R), std::true_type, std::false_type>::type
-{};
+// Basic operations
+template <typename TSetL, typename TSetR>
+struct Union;
+template <typename TSetL, typename TSetR>
+struct Intersection;
+template <typename TSetL, typename TSetR>
+struct Difference;
+template <typename TSetL, typename TSetR>
+struct SymmetricDifference;
+template <typename TSetL, typename TSetR>
+struct CartesianProduct;
+template <typename TSet>
+struct PowerSet;
+
+// Helper function declarations
+template <typename TElement, typename TSet>
+struct _append;
+template <typename TElement, typename TSet>
+struct _prefix;
+template <typename TElement, typename TSet>
+struct _permutate;
 
 // Empty set base case
-template <typename... Tail>
-struct Set
+template <>
+struct Set<>
 {
     using cardinality = NaturalCardinal<0>;
 
@@ -41,11 +64,9 @@ struct Set
     using unique = Set<>;
 };
 
-template <typename, typename>
-struct _append;
-template <typename, typename>
-struct Insert;
-
+/************************************************************************/
+/* Set implementation                                                   */
+/************************************************************************/
 template <typename Head, typename... Tail>
 struct Set<Head, Tail...>
 {
@@ -74,31 +95,23 @@ struct Set<Head, Tail...>
         typename _append<Head, typename Set<Tail...>::unique>::result>::type;
 };
 
-template <typename Head, typename... Tail>
-struct _append<Head, Set<Tail...>>
-{
-    using result = typename Set<Head, Tail...>;
-};
+/************************************************************************/
+/* Numeric ops implementations                                          */
+/************************************************************************/
+template <unsigned long long L, unsigned long long R>
+struct CardinalLess<NaturalCardinal<L>, NaturalCardinal<R>>
+    : public std::conditional<(L < R), std::true_type, std::false_type>::type
+{};
 
-template <typename Head, typename... Tail>
-struct Insert<Head, Set<Tail...>>
-{
-    using result = typename std::conditional<
-        Set<Tail...>::template has_member<Head>::value,
-        Set<Tail...>,
-        typename _append<Head, Set<Tail...>>::result>::type;
-};
-
-template <typename, typename>
-struct Union;
+/************************************************************************/
+/* Basic operations implementation                                     */
+/************************************************************************/
 template <typename... L, typename... R>
 struct Union<Set<L...>, Set<R...>>
 {
     using result = typename Set<L..., R...>::unique;
 };
 
-template <typename, typename>
-struct Intersection;
 template <typename... R>
 struct Intersection<Set<>, Set<R...>>
 {
@@ -112,13 +125,11 @@ struct Intersection<Set<L...>, Set<R...>>
         typename _append<
             typename Set<L...>::head,
             typename Intersection<typename Set<L...>::tail, Set<R...>>::
-                result>::result,
+                result>::_result,
         typename Intersection<typename Set<L...>::tail, Set<R...>>::result>::
         type;
 };
 
-template <typename, typename>
-struct Difference;
 template <typename... R>
 struct Difference<Set<>, Set<R...>>
 {
@@ -133,11 +144,9 @@ struct Difference<Set<L...>, Set<R...>>
         typename _append<
             typename Set<L...>::head,
             typename Difference<typename Set<L...>::tail, Set<R...>>::result>::
-            result>::type;
+            _result>::type;
 };
 
-template <typename, typename>
-struct SymmetricDifference;
 template <typename... L, typename... R>
 struct SymmetricDifference<Set<L...>, Set<R...>>
 {
@@ -146,23 +155,6 @@ struct SymmetricDifference<Set<L...>, Set<R...>>
         typename Difference<Set<R...>, Set<L...>>::result>::result;
 };
 
-template <typename, typename>
-struct _prefix;
-template <typename T>
-struct _prefix<T, Set<>>
-{
-    using result = Set<>;
-};
-template <typename T, typename... Ts>
-struct _prefix<T, Set<Ts...>>
-{
-    using result = typename _append<
-        typename std::pair<T, typename Set<Ts...>::head>,
-        typename _prefix<T, typename Set<Ts...>::tail>::result>::result;
-};
-
-template <typename, typename>
-struct CartesianProduct;
 template <typename... Rs>
 struct CartesianProduct<Set<>, Set<Rs...>>
 {
@@ -177,23 +169,6 @@ struct CartesianProduct<Set<Ls...>, Set<Rs...>>
             result>::result;
 };
 
-template <typename, typename>
-struct _permutate;
-template <typename Head>
-struct _permutate<Head, Set<>>
-{
-    using result = Set<Set<Head>>;
-};
-template <typename Head, typename... Tail>
-struct _permutate<Head, Set<Tail...>>
-{
-    using result = typename Union<
-        typename Set<typename _append<Head, Set<Tail...>>::result>,
-        typename _permutate<Head, typename Set<Tail...>::tail>::result>::result;
-};
-
-template <typename TSet>
-struct PowerSet;
 template <>
 struct PowerSet<Set<>>
 {
@@ -208,5 +183,74 @@ struct PowerSet<Set<Ts...>>
             typename Set<Ts...>::tail>::result,
         typename PowerSet<typename Set<Ts...>::tail>::result>::result;
 };
+
+/************************************************************************/
+/* Helper functions implementation                                      */
+/************************************************************************/
+template <typename TElement, typename... TSet>
+struct _append<TElement, Set<TSet...>>
+{
+    using _result = typename Set<TElement, TSet...>;
+    using result  = typename std::conditional<
+        Set<TSet...>::template has_member<TElement>::value,
+        typename Set<TSet...>,
+        typename Set<TElement, TSet...>>::type;
+};
+
+template <typename T>
+struct _prefix<T, Set<>>
+{
+    using result = Set<>;
+};
+template <typename T, typename... Ts>
+struct _prefix<T, Set<Ts...>>
+{
+    using result = typename _append<
+        typename std::pair<T, typename Set<Ts...>::head>,
+        typename _prefix<T, typename Set<Ts...>::tail>::result>::result;
+};
+
+template <typename Head>
+struct _permutate<Head, Set<>>
+{
+    using result = Set<Set<Head>>;
+};
+template <typename Head, typename... Tail>
+struct _permutate<Head, Set<Tail...>>
+{
+    using result = typename Union<
+        typename Set<typename _append<Head, Set<Tail...>>::result>,
+        typename _permutate<Head, typename Set<Tail...>::tail>::result>::result;
+};
+
+/************************************************************************/
+/* Predicate experiments                                                */
+/************************************************************************/
+template <typename TPredicate>
+struct PredicateSet
+{
+    template <typename T>
+    using has_member = typename TPredicate::template test<T>;
+};
+
+template <typename TSet>
+struct _conversion_predicate
+{
+    template <typename T>
+    using test = typename TSet::template has_member<T>;
+};
+
+/************************************************************************/
+/* std::is_same overload for sets                                       */
+/************************************************************************/
+template <typename... Ls, typename... Rs>
+struct std::is_same<tplsets::Set<Ls...>, tplsets::Set<Rs...>>
+    : std::conjunction<
+          typename std::is_same<
+              typename tplsets::Set<Ls...>::cardinality,
+              typename tplsets::Set<Rs...>::cardinality>,
+          typename tplsets::Set<Ls...>::template is_subset_of<
+              typename tplsets::Set<Rs...>>>
+{};
 
 } // namespace tplsets
