@@ -1,4 +1,5 @@
 #include "tplsets.h"
+#include "tplsets_predicate.h"
 
 #include <iostream>
 

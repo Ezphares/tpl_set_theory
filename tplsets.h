@@ -17,6 +17,13 @@ struct NaturalCardinal
     static constexpr bool is_finite           = true;
 };
 
+template <unsigned long long N>
+struct AlephCardinal
+{
+    static constexpr unsigned long long value = N;
+    static constexpr bool is_finite           = false;
+};
+
 // Numeric operations
 template <typename, typename>
 struct CardinalLess;
@@ -221,23 +228,6 @@ struct _permutate<Head, Set<Tail...>>
     using result = typename Union<
         typename Set<typename _append<Head, Set<Tail...>>::result>,
         typename _permutate<Head, typename Set<Tail...>::tail>::result>::result;
-};
-
-/************************************************************************/
-/* Predicate experiments                                                */
-/************************************************************************/
-template <typename TPredicate>
-struct PredicateSet
-{
-    template <typename T>
-    using has_member = typename TPredicate::template test<T>;
-};
-
-template <typename TSet>
-struct _conversion_predicate
-{
-    template <typename T>
-    using test = typename TSet::template has_member<T>;
 };
 
 /************************************************************************/
